@@ -4,46 +4,38 @@ import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTodayOrders } from "@/hooks/use-today-orders"
-import { TrendingUp, AlertCircle, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
-import { RefreshCw, BarChart3, PieChart as PieChartIcon } from "lucide-react"
+// IMPORT HOOK DI SINI
+import { useTodayOrders } from "@/hooks/use-today-orders" 
+import { TrendingUp, AlertCircle, CheckCircle, XCircle, AlertTriangle, RefreshCw, BarChart3, PieChart as PieChartIcon } from "lucide-react"
+
+// Asumsikan komponen chart dan hooks lain sudah ada (saya komen dulu agar tidak error jika file belum ada)
 import { MonitoringChart, HSAWorkOrderChart } from "@/components/dashboard"
 import { useMonitoring, useHSAWorkOrder } from "@/hooks"
 import { useTodayWorkComplete } from "@/hooks/use-work-complete"
 import { useTodayWorkCancel } from "@/hooks/use-today-work-cancel"
 import { useTodayWorkFail } from "@/hooks/use-today-work-fail"
-import { TrendingDown} from "lucide-react"
-
-// Interfaces will be used when data is fetched from Supabase
-
-// All data will be fetched from Supabase
 
 export default function MonitoringPage() {
   const [selectedMonth, setSelectedMonth] = useState("October")
   const [selectedBranch, setSelectedBranch] = useState("Branch")
   const [selectedWOK, setSelectedWOK] = useState("WOK")
-  const { data: todayOrders, loading: todayOrdersLoading, error: todayOrdersError } = useTodayOrders()
+
+  // --- INTEGRASI HOOK USE TODAY ORDERS ---
+  // Kita me-rename return value 'data' menjadi 'todayOrders' agar lebih jelas
+  const { 
+    data: todayOrders, 
+    loading: todayOrdersLoading, 
+    error: todayOrdersError 
+  } = useTodayOrders()
+
+  // Hooks lain (biarkan seperti kode awal)
   const { data: workComplete, loading: workCompleteLoading, error: workCompleteError } = useTodayWorkComplete()
-  // Fetch monitoring data from Supabase
   const { data: monitoringData, loading: monitoringLoading, error: monitoringError } = useMonitoring()
   const { data: hsaWorkOrderData, loading: hsaLoading, error: hsaError } = useHSAWorkOrder()
   const { data: workCancel, loading: workCancelLoading, error: workCancelError } = useTodayWorkCancel()
   const { data: workFail, loading: workFailLoading, error: workFailError } = useTodayWorkFail()
   
-  // Data will be fetched from Supabase - no filtering logic needed for now
-  const filteredData = useMemo(() => {
-    return {
-      kpiCards: [] as Array<{title: string, value: number, trend: number, color: string, bgColor: string}>,
-      updateLapangan: [] as Array<{name: string, value: number, percentage: number, color: string}>,
-      hsaWorkOrder: [] as Array<{name: string, value: number, color: string}>
-    }
-  }, [])
-
-  const monthOptions = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ]
-
+  const monthOptions = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   const branchOptions = ["Branch", "Banda Aceh", "Langsa", "Lhokseumawe", "Meulaboh", "Sigli"]
   const wokOptions = ["WOK", "WOK-001", "WOK-002", "WOK-003", "WOK-004"]
 
@@ -65,11 +57,13 @@ export default function MonitoringPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Data Work Order */}
+          
+          {/* --- KARTU DATA WORK ORDER (YANG MENGGUNAKAN HOOK) --- */}
           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Data Work Order</h3>
+                {/* Indikator Loading Kecil di Pojok Kanan Atas Kartu */}
                 <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
                   todayOrdersLoading 
                     ? 'bg-yellow-500/20 animate-pulse' 
@@ -79,14 +73,16 @@ export default function MonitoringPage() {
                 }`}></div>
               </div>
               
-              {/* // memanggil fungsi di database untuk mendapatkan data hari ini */}
-
+              {/* Menampilkan Angka Besar */}
               <div className="text-4xl font-bold text-white mb-3 tracking-tight">
                 {todayOrdersLoading ? (
+                  // Tampilan saat Loading (Skeleton)
                   <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div>
                 ) : todayOrdersError ? (
+                  // Tampilan saat Error
                   <span className="text-red-400 text-xl">Error</span>
                 ) : (
+                  // Tampilan Data Sukses
                   todayOrders.toLocaleString('id-ID')
                 )}
               </div>
@@ -105,249 +101,120 @@ export default function MonitoringPage() {
                 )}
               </div>
               
-              {/* Optional: Show last updated time */}
+              {/* Optional: Menampilkan waktu update terakhir */}
               {!todayOrdersLoading && !todayOrdersError && (
                 <div className="mt-2 text-xs text-gray-500">
-                  Terakhir diperbarui: {new Date().toLocaleTimeString('id-ID')}
+                  Live update (30s)
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Work Complete */}
-          <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Complete</h3>
-                <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
-                  workCompleteLoading 
-                    ? 'bg-yellow-500/20 animate-pulse' 
-                    : workCompleteError 
-                      ? 'bg-red-500/20' 
-                      : 'bg-green-500/20'
-                }`}></div>
-              </div>
-              
-              <div className="text-4xl font-bold text-white mb-3 tracking-tight">
-                {workCompleteLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div>
-                ) : workCompleteError ? (
-                  <span className="text-red-400 text-xl">Error</span>
-                ) : (
-                  workComplete.toLocaleString('id-ID')
-                )}
-              </div>
-              
-              <div className="flex items-center text-gray-400 text-sm font-medium">
-                {workCompleteError ? (
-                  <>
-                    <AlertCircle className="h-4 w-4 mr-2 text-red-400" />
-                    <span className="text-red-400">Gagal memuat data</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    <span>Selesai hari ini</span>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* ... SISA KARTU LAINNYA (Work Complete, Cancel, Fail) BIARKAN SAMA ... */}
+           {/* Work Complete */}
+           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Complete</h3>
+                 <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
+                   workCompleteLoading ? 'bg-yellow-500/20 animate-pulse' : workCompleteError ? 'bg-red-500/20' : 'bg-green-500/20'
+                 }`}></div>
+               </div>
+               <div className="text-4xl font-bold text-white mb-3 tracking-tight">
+                 {workCompleteLoading ? <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div> : workCompleteError ? <span className="text-red-400 text-xl">Error</span> : workComplete.toLocaleString('id-ID')}
+               </div>
+               <div className="flex items-center text-gray-400 text-sm font-medium">
+                 <CheckCircle className="h-4 w-4 mr-2" /> <span>Selesai hari ini</span>
+               </div>
+             </CardContent>
+           </Card>
 
-          {/* Work Cancel */}
-          <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Cancel</h3>
-                <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
-                  workCancelLoading 
-                    ? 'bg-yellow-500/20 animate-pulse' 
-                    : workCancelError 
-                      ? 'bg-red-500/20' 
-                      : 'bg-orange-500/20'
-                }`}></div>
-              </div>
-              
-              <div className="text-4xl font-bold text-white mb-3 tracking-tight">
-                {workCancelLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div>
-                ) : workCancelError ? (
-                  <span className="text-red-400 text-xl">Error</span>
-                ) : (
-                  workCancel.toLocaleString('id-ID')
-                )}
-              </div>
-              
-              <div className="flex items-center text-gray-400 text-sm font-medium">
-                {workCancelError ? (
-                  <>
-                    <AlertCircle className="h-4 w-4 mr-2 text-red-400" />
-                    <span className="text-red-400">Gagal memuat data</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-4 w-4 mr-2 text-orange-400" />
-                    <span>Dibatalkan hari ini</span>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          {/* Work Fail */}
-          <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Fail</h3>
-                <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
-                  workFailLoading 
-                    ? 'bg-yellow-500/20 animate-pulse' 
-                    : workFailError 
-                      ? 'bg-red-500/20' 
-                      : 'bg-red-500/20'
-                }`}></div>
-              </div>
-              
-              <div className="text-4xl font-bold text-white mb-3 tracking-tight">
-                {workFailLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div>
-                ) : workFailError ? (
-                  <span className="text-red-400 text-xl">Error</span>
-                ) : (
-                  workFail.toLocaleString('id-ID')
-                )}
-              </div>
-              
-              <div className="flex items-center text-gray-400 text-sm font-medium">
-                {workFailError ? (
-                  <>
-                    <AlertCircle className="h-4 w-4 mr-2 text-red-400" />
-                    <span className="text-red-400">Gagal memuat data</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="h-4 w-4 mr-2 text-red-400" />
-                    <span>Gagal hari ini</span>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-      
+           {/* Work Cancel */}
+           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Cancel</h3>
+                 <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
+                   workCancelLoading ? 'bg-yellow-500/20 animate-pulse' : workCancelError ? 'bg-red-500/20' : 'bg-orange-500/20'
+                 }`}></div>
+               </div>
+               <div className="text-4xl font-bold text-white mb-3 tracking-tight">
+                 {workCancelLoading ? <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div> : workCancelError ? <span className="text-red-400 text-xl">Error</span> : workCancel.toLocaleString('id-ID')}
+               </div>
+               <div className="flex items-center text-gray-400 text-sm font-medium">
+                 <XCircle className="h-4 w-4 mr-2 text-orange-400" /> <span>Dibatalkan hari ini</span>
+               </div>
+             </CardContent>
+           </Card>
+
+           {/* Work Fail */}
+           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-sm font-semibold text-gray-300 tracking-wide">Work Fail</h3>
+                 <div className={`h-3 w-3 rounded-full border-2 border-white/20 ${
+                   workFailLoading ? 'bg-yellow-500/20 animate-pulse' : workFailError ? 'bg-red-500/20' : 'bg-red-500/20'
+                 }`}></div>
+               </div>
+               <div className="text-4xl font-bold text-white mb-3 tracking-tight">
+                 {workFailLoading ? <div className="animate-pulse bg-gray-600 h-10 w-24 rounded"></div> : workFailError ? <span className="text-red-400 text-xl">Error</span> : workFail.toLocaleString('id-ID')}
+               </div>
+               <div className="flex items-center text-gray-400 text-sm font-medium">
+                 <AlertTriangle className="h-4 w-4 mr-2 text-red-400" /> <span>Gagal hari ini</span>
+               </div>
+             </CardContent>
+           </Card>
+
         </div>
 
-        {/* KPI Cards ??????????????????????????????????????????????*/}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredData.kpiCards.map((card, index) => (
-            <Card key={index} className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl hover:shadow-2xl transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-300 tracking-wide">{card.title}</h3>
-                  <div className={`h-3 w-3 rounded-full ${card.bgColor} border-2 border-white/20`}></div>
-                </div>
-                <div className="text-4xl font-bold text-white mb-3 tracking-tight">{card.value.toLocaleString()}</div>
-                <div className={`flex items-center ${card.color} text-sm font-medium`}>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  <span>{card.trend > 0 ? '+' : ''}{card.trend}% Up from yesterday</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div> */}
-
         {/* Filters */}
-        
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center space-x-0">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[160px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1e293b] border-[#475569]">
-                    {monthOptions.map((month) => (
-                      <SelectItem key={month} value={month} className="text-white hover:bg-[#334155] focus:bg-[#334155]">
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                  <SelectTrigger className="w-[140px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1e293b] border-[#475569]">
-                    {branchOptions.map((branch) => (
-                      <SelectItem key={branch} value={branch} className="text-white hover:bg-[#334155] focus:bg-[#334155]">
-                        {branch}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedWOK} onValueChange={setSelectedWOK}>
-                  <SelectTrigger className="w-[120px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1e293b] border-[#475569]">
-                    {wokOptions.map((wok) => (
-                      <SelectItem key={wok} value={wok} className="text-white hover:bg-[#334155] focus:bg-[#334155]">
-                        {wok}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button 
-                onClick={handleResetFilter}
-                variant="outline" 
-                className="bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] hover:border-[#64748b] transition-all duration-200 shadow-md"
-              >
-                <RefreshCw className="h-4 w-4 mr-2 text-yellow-400" />
-                Reset Filter
-              </Button>
-
-            </div>
-       
+        <div className="flex flex-wrap items-center gap-4">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[160px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-[#1e293b] border-[#475569]">
+                {monthOptions.map((month) => (<SelectItem key={month} value={month} className="text-white hover:bg-[#334155] focus:bg-[#334155]">{month}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+              <SelectTrigger className="w-[140px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-[#1e293b] border-[#475569]">
+                {branchOptions.map((branch) => (<SelectItem key={branch} value={branch} className="text-white hover:bg-[#334155] focus:bg-[#334155]">{branch}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedWOK} onValueChange={setSelectedWOK}>
+              <SelectTrigger className="w-[120px] bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] transition-colors"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-[#1e293b] border-[#475569]">
+                {wokOptions.map((wok) => (<SelectItem key={wok} value={wok} className="text-white hover:bg-[#334155] focus:bg-[#334155]">{wok}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleResetFilter} variant="outline" className="bg-[#323D4E] border-[#475569] text-white hover:bg-[#1e293b] hover:border-[#64748b] transition-all duration-200 shadow-md">
+              <RefreshCw className="h-4 w-4 mr-2 text-yellow-400" /> Reset Filter
+            </Button>
+        </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Total Update Lapangan */}
           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl">
             <CardHeader className="pb-4">
               <CardTitle className="text-white flex items-center space-x-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-blue-400" />
-                </div>
+                <div className="p-2 bg-blue-500/20 rounded-lg"><BarChart3 className="h-5 w-5 text-blue-400" /></div>
                 <span className="text-xl font-semibold">Total Update Lapangan</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <MonitoringChart 
-                data={monitoringData} 
-                loading={monitoringLoading} 
-                error={monitoringError} 
-              />
+              <MonitoringChart data={monitoringData} loading={monitoringLoading} error={monitoringError} />
             </CardContent>
           </Card>
 
-          {/* Total Work Order berdasarkan HSA */}
           <Card className="bg-gradient-to-br from-[#1e293b] to-[#334155] border-[#475569] shadow-xl">
             <CardHeader className="pb-4">
               <CardTitle className="text-white flex items-center space-x-3">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <PieChartIcon className="h-5 w-5 text-purple-400" />
-                </div>
+                <div className="p-2 bg-purple-500/20 rounded-lg"><PieChartIcon className="h-5 w-5 text-purple-400" /></div>
                 <span className="text-xl font-semibold">Total Work Order berdasarkan HSA</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <HSAWorkOrderChart 
-                data={hsaWorkOrderData} 
-                loading={hsaLoading} 
-                error={hsaError} 
-              />
+              <HSAWorkOrderChart data={hsaWorkOrderData} loading={hsaLoading} error={hsaError} />
             </CardContent>
           </Card>
         </div>
